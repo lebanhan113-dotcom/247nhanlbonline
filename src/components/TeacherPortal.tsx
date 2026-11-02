@@ -25,7 +25,8 @@ import {
   Layers,
   Archive,
   RefreshCw,
-  Settings2
+  Settings2,
+  Trash2
 } from 'lucide-react';
 import { Exam, ExamSubmission, ExamStats, SupabaseConfig } from '../types/exam';
 import { StorageService } from '../utils/storage';
@@ -66,6 +67,7 @@ export const TeacherPortal: React.FC<TeacherPortalProps> = ({
   // Modals
   const [reviewingExam, setReviewingExam] = useState<Exam | null>(null);
   const [editingExamInfo, setEditingExamInfo] = useState<Exam | null>(null);
+  const [deletingExam, setDeletingExam] = useState<Exam | null>(null);
   const [showImportModal, setShowImportModal] = useState(false);
   const [showSupabaseModal, setShowSupabaseModal] = useState(false);
 
@@ -579,6 +581,14 @@ export const TeacherPortal: React.FC<TeacherPortalProps> = ({
                           </>
                         )}
                       </button>
+
+                      <button
+                        onClick={() => setDeletingExam(exam)}
+                        className="p-2 text-rose-600 hover:text-white hover:bg-rose-600 rounded-xl text-xs font-semibold transition border border-rose-200 hover:border-rose-600 shadow-sm"
+                        title="Xóa đề thi khỏi kho quản trị"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
                     </div>
                   </div>
                 </div>
@@ -701,6 +711,79 @@ export const TeacherPortal: React.FC<TeacherPortalProps> = ({
             onUpdateSupabaseConfig(cfg);
           }}
         />
+      )}
+
+      {/* Delete Exam Confirmation Modal */}
+      {deletingExam && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/70 backdrop-blur-sm p-4 overflow-y-auto">
+          <div className="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-slate-200 space-y-5 animate-scaleUp">
+            <div className="flex items-start gap-4">
+              <div className="w-12 h-12 rounded-2xl bg-rose-100 text-rose-600 flex items-center justify-center shrink-0 border border-rose-200">
+                <Trash2 className="w-6 h-6" />
+              </div>
+              <div>
+                <h3 className="font-extrabold text-slate-900 text-lg">
+                  Xác nhận xóa đề thi?
+                </h3>
+                <p className="text-xs text-slate-500 mt-0.5">
+                  Hành động này sẽ xóa đề thi khỏi kho quản trị
+                </p>
+              </div>
+            </div>
+
+            <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200 space-y-2 text-xs">
+              <div>
+                <span className="text-slate-400 block">Tên đề thi:</span>
+                <span className="font-bold text-slate-900 text-sm">{deletingExam.title}</span>
+              </div>
+              <div className="flex justify-between pt-1">
+                <span className="text-slate-500">Mã đề:</span>
+                <span className="font-mono font-bold text-blue-700 bg-blue-50 px-2 py-0.5 rounded border border-blue-200">
+                  {deletingExam.code}
+                </span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-slate-500">Trạng thái:</span>
+                <span className="font-bold text-slate-800">
+                  {deletingExam.status === 'published' ? 'Đang phát hành' : deletingExam.status === 'pending_review' ? 'Chưa duyệt' : 'Đã duyệt / Đóng'}
+                </span>
+              </div>
+
+              {deletingExam.status === 'published' && (
+                <div className="p-2.5 bg-amber-50 rounded-xl border border-amber-200 text-amber-900 font-medium">
+                  ⚠️ Lưu ý: Đề thi đang mở phát hành. Sau khi xóa, học sinh sẽ không còn thấy đề thi này trên Cổng thí sinh.
+                </div>
+              )}
+
+              {submissions.filter((s) => s.examId === deletingExam.id).length > 0 && (
+                <div className="p-2.5 bg-rose-50 rounded-xl border border-rose-200 text-rose-900 font-medium">
+                  ⚠️ Cảnh báo: Hiện có {submissions.filter((s) => s.examId === deletingExam.id).length} bài nộp của học sinh gắn liền với mã đề này.
+                </div>
+              )}
+            </div>
+
+            <div className="flex items-center justify-end gap-3 pt-2">
+              <button
+                type="button"
+                onClick={() => setDeletingExam(null)}
+                className="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold rounded-xl text-xs transition"
+              >
+                Hủy bỏ
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  StorageService.deleteExam(deletingExam.id);
+                  setDeletingExam(null);
+                }}
+                className="px-5 py-2.5 bg-rose-600 hover:bg-rose-700 text-white font-bold rounded-xl text-xs shadow-md transition flex items-center gap-1.5"
+              >
+                <Trash2 className="w-4 h-4" />
+                <span>Xác Nhận Xóa Đề Thi</span>
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

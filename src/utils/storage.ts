@@ -136,6 +136,16 @@ export const StorageService = {
     this.saveExams(list);
   },
 
+  deleteExam(examId: string): boolean {
+    const list = this.getExams();
+    const updated = list.filter((e) => e.id !== examId);
+    if (updated.length !== list.length) {
+      this.saveExams(updated);
+      return true;
+    }
+    return false;
+  },
+
   toggleAnswersVisibility(examId: string, visible: boolean): Exam | undefined {
     const list = this.getExams();
     const target = list.find((e) => e.id === examId);
